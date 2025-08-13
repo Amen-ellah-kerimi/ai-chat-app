@@ -5,7 +5,17 @@ import { useEffect, useRef } from 'react';
 import Message from '@/components/Message';
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat();
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+    onError: (error) => {
+      console.error('❌ Chat error:', error.message);
+    },
+    onResponse: (response) => {
+      console.log('✅ Response received:', response.status);
+    },
+    onFinish: (message) => {
+      console.log('✅ Message completed:', message.content.length, 'characters');
+    }
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -56,17 +66,30 @@ export default function ChatPage() {
       {/* Error Display */}
       {error && (
         <div className="max-w-4xl mx-auto w-full px-4 pb-2">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <div className="flex items-center">
-              <div className="text-red-600 text-sm">
-                <strong>Error:</strong> {error.message || 'An error occurred while processing your request.'}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="text-red-400 text-xl">⚠️</div>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Unable to process your request
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  {error.message || 'An unexpected error occurred. Please try again.'}
+                </div>
+                {error.message?.includes('API key') && (
+                  <div className="mt-3 text-xs text-red-600 bg-red-100 p-2 rounded">
+                    <strong>For developers:</strong> Please configure your OpenAI API key in the environment variables.
+                  </div>
+                )}
+                {error.message?.includes('quota') && (
+                  <div className="mt-3 text-xs text-red-600 bg-red-100 p-2 rounded">
+                    <strong>API Quota Issue:</strong> Please check your OpenAI billing settings or try again later.
+                  </div>
+                )}
               </div>
             </div>
-            {error.message?.includes('API key') && (
-              <div className="mt-2 text-xs text-red-500">
-                Please check your OpenAI API key configuration in the environment variables.
-              </div>
-            )}
           </div>
         </div>
       )}
